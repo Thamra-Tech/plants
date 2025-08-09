@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مقالات النباتات | ثمرة تك</title>
+        <link rel="icon" href="https://blogger.googleusercontent.com/img/a/AVvXsEjzBCrRo0kdSbbCDAtDiWQzLmybqE3mHCYvRapwVSJLBkY5RFE8nSeSxcUid8rqrh7wVc4BcjqxNmvbZqAqlWPuMHQsUi4hhPR7uxCSJqlE7O0QPYWunbPVarphgWYN2PbYQUlvutuFbHXYQ5YiQP1KWGUa9BAaeQuaSJBQulqQvpuL2NprLNhZClCTf0v0">
+    <!-- تضمين مكتبة Tailwind CSS من CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- تضمين مكتبة Font Awesome للأيقونات -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" xintegrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <!-- تضمين خط Cairo من Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* إضافة خط عربي احترافي */
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: #f7fafc;
+            color: #2d3748;
+        }
+
+        /* تصميم زر القائمة المتجاوب */
+        .hamburger-icon {
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            width: 2rem;
+            height: 2rem;
+            z-index: 60;
+        }
+        .line {
+            width: 2rem;
+            height: 0.25rem;
+            background-color: #16a34a;
+            border-radius: 10px;
+            transition: all 0.3s linear;
+            transform-origin: 1px;
+        }
+        .open .line:nth-child(1) {
+            transform: rotate(45deg) translate(5px, 5px);
+        }
+        .open .line:nth-child(2) {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        .open .line:nth-child(3) {
+            transform: rotate(-45deg) translate(5px, -5px);
+        }
+
+        /* تصميم شريط التمرير */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* تصميم Toast Notification */
+        .toast-container {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.5rem; /* تغيير الموقع إلى اليمين */
+            z-index: 1000;
+            display: flex;
+            flex-direction: column-reverse;
+            gap: 1rem;
+        }
+        .toast {
+            opacity: 0;
+            visibility: hidden;
+            transform: translateX(100%);
+            transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out, visibility 0.5s;
+        }
+        .toast.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(0);
+        }
+
+        /* الرسوم المتحركة للعناصر */
+        @keyframes fadeInRight {
+            0% { opacity: 0; transform: translateX(-50px); }
+            100% { opacity: 1; transform: translateX(0); }
+        }
+        .animate-fade-in-right {
+            animation: fadeInRight 0.8s ease-in-out forwards;
+            opacity: 0;
+        }
+
+        @keyframes fadeInUp {
+            0% { opacity: 0; transform: translateY(20px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in-up {
+            animation: fadeInUp 0.8s ease-out forwards;
+            opacity: 0;
+        }
+
+        /* الشريط الجانبي للفلترة */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            right: -320px; /* إخفاء الشريط الجانبي في البداية */
+            width: 320px;
+            height: 100%;
+            background-color: #f0fff4;
+            box-shadow: -4px 0 10px rgba(0,0,0,0.1);
+            transition: right 0.3s ease-in-out;
+            z-index: 50;
+            padding: 1.5rem;
+            overflow-y: auto;
+        }
+        .sidebar.open {
+            right: 0;
+        }
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 40;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease-in-out, visibility 0.3s;
+        }
+        .overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+    </style>
+</head>
+<body class="font-cairo">
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- شريط التنقل (Navbar) -->
+    <header class="bg-white sticky top-0 z-50 shadow-md p-4">
+        <nav class="container mx-auto flex justify-between items-center">
+            <!-- الشعار -->
+            <a href="#" class="text-2xl font-bold text-green-700">ThamraTech</a>
+            
+            <!-- قائمة التنقل للكمبيوتر -->
+            <ul class="hidden md:flex space-x-8 space-x-reverse text-lg">
+                <li><a href="https://thamra-tech.github.io/h/" class="text-gray-600 hover:text-green-600 transition-colors">الرئيسية</a></li>
+                <li><a href="#" class="text-gray-600 hover:text-green-600 transition-colors">المقالات</a></li>
+                <li><a href="#" class="text-gray-600 hover:text-green-600 transition-colors">عنا</a></li>
+                <li><a href="#" class="text-gray-600 hover:text-green-600 transition-colors">تواصل معنا</a></li>
+            </ul>
+
+            <!-- زر "انضم إلينا" -->
+             <a href="https://thamra-tech.github.io/join-Us/">
+                 <button id="join-now-btn" class="hidden md:inline-flex items-center px-4 py-2 border border-transparent text-lg font-medium rounded-xl shadow-sm text-white bg-green-600 hover:bg-green-700 transition-colors">
+                     انضم الآن
+                    </button>
+                </a>
+            
+            <!-- زر القائمة المتجاوبة (Hamburger) -->
+            <div id="menu-btn" class="md:hidden">
+                <div class="hamburger-icon">
+                    <div class="line"></div>
+                    <div class="line"></div>
+                    <div class="line"></div>
+                </div>
+            </div>
+        </nav>
+        
+        <!-- القائمة المتجاوبة (Mobile Menu) -->
+        <div id="mobile-menu" class="hidden md:hidden absolute top-full left-0 w-full bg-white shadow-lg py-4 transition-all duration-300">
+            <ul class="flex flex-col items-center space-y-4 text-lg">
+                <li><a href="https://thamra-tech.github.io/h/" class="text-gray-600 hover:text-green-600 transition-colors block py-2">الرئيسية</a></li>
+                <li><a href="#" class="text-gray-600 hover:text-green-600 transition-colors block py-2">المقالات</a></li>
+                <li><a href="#" class="text-gray-600 hover:text-green-600 transition-colors block py-2">عنا</a></li>
+                <li><a href="#" class="text-gray-600 hover:text-green-600 transition-colors block py-2">تواصل معنا</a></li>
+                <li>
+             <a href="https://thamra-tech.github.io/join-Us/">
+                    <button id="join-now-mobile-btn" class="inline-flex items-center px-4 py-2 text-lg font-medium rounded-xl shadow-sm text-white bg-green-600 hover:bg-green-700 transition-colors">انضم الآن</button>
+             </a>
+                </li>
+            </ul>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-10 min-h-screen">
+        <h1 class="text-4xl md:text-5xl font-bold text-center text-green-800 mb-8 animate-fade-in-up">مقالات عن النباتات</h1>
+        
+        <!-- شريط البحث والفلترة -->
+        <div class="flex flex-col sm:flex-row justify-center items-center gap-4 mb-10 animate-fade-in-up" style="animation-delay: 0.3s;">
+            <div class="relative w-full sm:max-w-xl">
+                <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                    <i class="fa-solid fa-search text-gray-400"></i>
+                </div>
+                <input type="text" id="search-input" placeholder="ابحث عن نبات..." class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 transition-all text-right">
+            </div>
+            <button id="filter-btn" class="w-full sm:w-auto px-6 py-3 bg-green-600 text-white rounded-xl shadow-md hover:bg-green-700 transition-colors flex items-center justify-center gap-2">
+                <i class="fa-solid fa-filter"></i>
+                <span>فلترة</span>
+            </button>
+        </div>
+
+        <!-- قسم عرض المقالات -->
+        <div id="articles-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            <!-- سيتم إضافة المقالات هنا بواسطة JavaScript -->
+        </div>
+
+        <!-- رسالة عدم وجود مقالات -->
+        <div id="no-articles-message" class="hidden text-center text-gray-500 text-xl py-10">
+            عذراً، لا توجد مقالات تتطابق مع بحثك.
+        </div>
+    </main>
+
+    <!-- الشريط الجانبي للفلترة -->
+    <div id="filter-sidebar" class="sidebar">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-2xl font-bold text-green-800">خيارات الفلترة</h3>
+            <button id="close-sidebar-btn" class="text-gray-500 hover:text-red-500 transition-colors">
+                <i class="fa-solid fa-xmark text-2xl"></i>
+            </button>
+        </div>
+        <div class="space-y-4">
+            <h4 class="font-bold text-lg text-gray-700">نوع النبات</h4>
+            <div class="flex items-center">
+                <input type="checkbox" id="vegetables-filter" value="خضار" class="filter-checkbox appearance-none h-5 w-5 bg-gray-200 checked:bg-green-600 rounded-md transition-colors cursor-pointer">
+                <label for="vegetables-filter" class="mr-2 text-gray-700 cursor-pointer">خضروات</label>
+            </div>
+            <div class="flex items-center">
+                <input type="checkbox" id="fruits-filter" value="فاكهة" class="filter-checkbox appearance-none h-5 w-5 bg-gray-200 checked:bg-green-600 rounded-md transition-colors cursor-pointer">
+                <label for="fruits-filter" class="mr-2 text-gray-700 cursor-pointer">فاكهة</label>
+            </div>
+            <div class="flex items-center">
+                <input type="checkbox" id="ornamental-filter" value="زينة" class="filter-checkbox appearance-none h-5 w-5 bg-gray-200 checked:bg-green-600 rounded-md transition-colors cursor-pointer">
+                <label for="ornamental-filter" class="mr-2 text-gray-700 cursor-pointer">نباتات زينة</label>
+            </div>
+            <div class="flex items-center">
+                <input type="checkbox" id="strategic-filter" value="محاصيل استراتيجية" class="filter-checkbox appearance-none h-5 w-5 bg-gray-200 checked:bg-green-600 rounded-md transition-colors cursor-pointer">
+                <label for="strategic-filter" class="mr-2 text-gray-700 cursor-pointer">محاصيل استراتيجية</label>
+            </div>
+        </div>
+    </div>
+    
+    <!-- الغطاء الأسود عند فتح الشريط الجانبي -->
+    <div id="overlay" class="overlay"></div>
+
+    <!-- تذييل الصفحة (Footer) -->
+    <footer class="bg-green-800 text-white py-12">
+        <div class="container mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-8">
+            <!-- قسم الشعار والوصف -->
+            <div class="mb-6 md:mb-0 text-center md:text-right">
+                <div class="flex justify-center md:justify-start mb-4">
+                    <img src="https://blogger.googleusercontent.com/img/a/AVvXsEhWHpPFdGDJNmAhr8cuWAy_PCRYwv0puy9jpemeKag8FTOOdlfXOw_AFbpo1S9HYu-zQuYeSW3twIFRtLR_aCHryUZXpbW9xVFWULftjJp6u08s52o5rQm52vYcxGFSk3eujBicYgpV3QyY2XvkAxAFpzi5ur5R4laNUW4zMTHCsB401L17L_a39pBq4DE_" alt="Thamra-Tech" class="w-[80px]">
+                </div>
+                <h3 class="text-xl font-bold mb-2">ThamraTech</h3>
+                <p class="text-gray-300 text-sm max-w-sm mx-auto md:mx-0">
+                    منصة متكاملة لتقديم الحلول والاستشارات الزراعية المتطورة، تهدف إلى تمكين المزارعين والمهندسين.
+                </p>
+            </div>
+
+            <!-- قسم الروابط السريعة -->
+            <div class="text-center md:text-right">
+                <h4 class="text-xl font-bold mb-4">روابط سريعة</h4>
+                <ul class="space-y-2">
+                    <li><a href="#" class="text-gray-300 hover:text-white transition-colors">الرئيسية</a></li>
+                    <li><a href="#" class="text-gray-300 hover:text-white transition-colors">المقالات</a></li>
+                    <li><a href="#" class="text-gray-300 hover:text-white transition-colors">عنا</a></li>
+                    <li><a href="#" class="text-gray-300 hover:text-white transition-colors">تواصل معنا</a></li>
+                </ul>
+            </div>
+
+            <!-- قسم السوشيال ميديا -->
+            <div class="text-center md:text-right">
+                <h4 class="text-xl font-bold mb-4">تابعنا على</h4>
+                <div class="flex justify-center md:justify-end space-x-4 space-x-reverse">
+                    <a target="_blank " href="https://www.facebook.com/profile.php?id=61579471070182&mibextid=ZbWKwL" class="text-gray-300 hover:text-white transition-colors">
+                        <i class="fa-brands fa-facebook-f text-2xl"></i>
+                    </a>
+                    <a href="#" class="text-gray-300 hover:text-white transition-colors">
+                        <i class="fa-brands fa-x-twitter text-2xl"></i>
+                    </a>
+                    <a href="#" class="text-gray-300 hover:text-white transition-colors">
+                        <i class="fa-brands fa-instagram text-2xl"></i>
+                    </a>
+                    <a href="#" class="text-gray-300 hover:text-white transition-colors">
+                        <i class="fa-brands fa-linkedin-in text-2xl"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="container mx-auto px-4 mt-8 text-center border-t border-green-700 pt-6">
+            <p class="text-gray-400 text-sm">&copy; 2024 ThamraTech. جميع الحقوق محفوظة.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const $ = selector => document.querySelector(selector);
+            const $$ = selector => document.querySelectorAll(selector);
+
+            // بيانات المقالات الوهمية
+            const articlesData = [
+                {
+                    image: 'https://placehold.co/400x250/bbf7d0/22c55e?text=tomato',
+                    title: 'زراعة الطماطم: من البذرة إلى الحصاد',
+                    description: 'دليل شامل لزراعة الطماطم في حديقتك المنزلية، بدءًا من اختيار البذور وحتى الحصول على محصول وفير.',
+                    author: 'أحمد محمود',
+                    date: '2024-05-15',
+                    views: 1250,
+                    tag: 'خضروات',
+                    url: "#"
+                },
+                {
+                    image: 'https://placehold.co/400x250/d1e7ff/007bff?text=flower',
+                    title: 'أسرار العناية بالورود: لجمال يدوم',
+                    description: 'نصائح الخبراء للعناية بأنواع الورود المختلفة وضمان إزهارها بشكل صحي ومستمر على مدار العام.',
+                    author: 'فاطمة الزهراء',
+                    date: '2024-05-20',
+                    views: 890,
+                    tag: 'زينة',
+                    url: "#"
+                },
+                // {
+                //     image: 'https://placehold.co/400x250/ffe2d1/ff9900?text=برتقال',
+                //     title: 'أصناف البرتقال الأفضل للزراعة في المناطق الدافئة',
+                //     description: 'تعرف على أفضل أصناف البرتقال التي تتكيف مع الأجواء الحارة وطرق زراعتها للحصول على ثمار لذيذة.',
+                //     author: 'محمد علي',
+                //     date: '2024-06-01',
+                //     views: 1500,
+                //     tag: 'فاكهة'
+                // },
+                // {
+                //     image: 'https://placehold.co/400x250/e0e7ff/5770c0?text=قمح',
+                //     title: 'القمح: أساس الأمن الغذائي العالمي',
+                //     description: 'مقال عن أهمية محصول القمح والطرق الحديثة لزراعته وزيادة إنتاجيته لمواجهة التحديات العالمية.',
+                //     author: 'د. سامي العلي',
+                //     date: '2024-06-10',
+                //     views: 2300,
+                //     tag: 'محاصيل استراتيجية'
+                // },
+                // {
+                //     image: 'https://placehold.co/400x250/c6e3d0/28a745?text=خيار',
+                //     title: 'زراعة الخيار في البيوت البلاستيكية',
+                //     description: 'دليل عملي لزراعة الخيار في بيئة محمية لضمان محصول مستمر عالي الجودة طوال العام.',
+                //     author: 'نور الهدي',
+                //     date: '2024-06-12',
+                //     views: 950,
+                //     tag: 'خضروات'
+                // },
+                // {
+                //     image: 'https://placehold.co/400x250/fde0dc/dc3545?text=زيتون',
+                //     title: 'شجرة الزيتون: رمز السلام والخير',
+                //     description: 'مقال عن شجرة الزيتون المباركة وطرق زراعتها والعناية بها للحصول على أجود أنواع الزيتون وزيت الزيتون.',
+                //     author: 'علي حسين',
+                //     date: '2024-06-15',
+                //     views: 1800,
+                //     tag: 'فاكهة'
+                // },
+                // {
+                //     image: 'https://placehold.co/400x250/f0e68c/6b8e23?text=أرز',
+                //     title: 'تقنيات ري محصول الأرز لترشيد استهلاك المياه',
+                //     description: 'استعراض لأحدث تقنيات الري المستخدمة في حقول الأرز بهدف توفير المياه وزيادة كفاءة الإنتاج.',
+                //     author: 'د. يوسف الشريف',
+                //     date: '2024-06-20',
+                //     views: 2100,
+                //     tag: 'محاصيل استراتيجية'
+                // },
+                // {
+                //     image: 'https://placehold.co/400x250/d3d3d3/808080?text=صبار',
+                //     title: 'نباتات الصبار: رفيقك المثالي في الأجواء الصحراوية',
+                //     description: 'تعرف على خصائص نباتات الصبار وكيفية العناية بها في ظروف الجفاف ودرجات الحرارة المرتفعة.',
+                //     author: 'ريم سعيد',
+                //     date: '2024-06-25',
+                //     views: 750,
+                //     tag: 'زينة'
+                // }
+            ];
+
+            const articlesContainer = $('#articles-container');
+            const searchInput = $('#search-input');
+            const filterBtn = $('#filter-btn');
+            const filterSidebar = $('#filter-sidebar');
+            const closeSidebarBtn = $('#close-sidebar-btn');
+            const overlay = $('#overlay');
+            const filterCheckboxes = $$('.filter-checkbox');
+            const noArticlesMessage = $('#no-articles-message');
+
+            // دالة لعرض رسائل التنبيه (Toast)
+            const showToast = (title, message, type) => {
+                const toastContainer = $('#toast-container');
+                const toast = document.createElement('div');
+                toast.className = 'toast p-4 rounded-xl shadow-lg flex items-start';
+                
+                let bgColor, borderColor, textColor, iconHtml;
+                if (type === 'success') {
+                    bgColor = 'bg-green-100';
+                    borderColor = 'border-green-500';
+                    textColor = 'text-green-800';
+                    iconHtml = '<i class="fa-solid fa-circle-check text-2xl mt-1"></i>';
+                } else if (type === 'error') {
+                    bgColor = 'bg-red-100';
+                    borderColor = 'border-red-500';
+                    textColor = 'text-red-800';
+                    iconHtml = '<i class="fa-solid fa-circle-xmark text-2xl mt-1"></i>';
+                } else if (type === 'warning') {
+                    bgColor = 'bg-yellow-100';
+                    borderColor = 'border-yellow-500';
+                    textColor = 'text-yellow-800';
+                    iconHtml = '<i class="fa-solid fa-triangle-exclamation text-2xl mt-1"></i>';
+                }
+
+                toast.innerHTML = `
+                    <div class="${bgColor} ${borderColor} ${textColor} p-4 rounded-xl shadow-lg flex items-start">
+                        <div class="w-8 h-8 mr-3 flex-shrink-0">${iconHtml}</div>
+                        <div>
+                            <h3 class="font-bold text-lg">${title}</h3>
+                            <p class="text-sm">${message}</p>
+                        </div>
+                    </div>
+                `;
+                
+                toastContainer.appendChild(toast);
+                
+                setTimeout(() => {
+                    toast.classList.add('show');
+                }, 10); // تأخير بسيط لتشغيل الانتقال
+
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                    setTimeout(() => {
+                        toast.remove();
+                    }, 500); // الانتظار حتى ينتهي الانتقال قبل الإزالة
+                }, 4000); // إظهار الرسالة لمدة 4 ثواني
+            };
+
+            // دالة لإنشاء بطاقة مقال
+            const createCard = (article, index) => {
+                const card = document.createElement('div');
+                card.className = `card bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-2 transform animate-fade-in-up`;
+                card.style.animationDelay = `${index * 0.1}s`;
+                card.innerHTML = `
+<img src="${article.image}" alt="${article.title}" class="w-full h-48 object-cover">
+
+<div class="p-6">
+    <div class="flex justify-between items-center mb-2">
+        <span class="bg-green-100 text-green-800 text-xs font-bold px-3 py-1 rounded-full">${article.tag}</span>
+        <span class="text-gray-500 text-sm"><i class="fa-solid fa-eye ml-1"></i>${article.views}</span>
+    </div>
+
+    <h3 class="text-xl font-bold mb-2 text-green-800">${article.title}</h3>
+    
+    <p class="text-gray-600 text-sm mb-4">${article.description}</p>
+    
+    <div class="flex justify-between items-center text-gray-400 text-xs mt-4 border-t border-gray-100 pt-4">
+        <div class="flex items-center">
+            <i class="fa-solid fa-user ml-1"></i>
+            <span class="ml-4">${article.author}</span>
+            <i class="fa-solid fa-calendar-alt ml-1"></i>
+            <span>${article.date}</span>
+        </div>
+        
+        <a href="${article.url}" class="text-green-600 hover:text-green-800 font-bold transition duration-300 ease-in-out">
+            اقرأ المزيد
+        </a>
+    </div>
+</div>
+                `;
+                return card;
+            };
+
+            // دالة لعرض المقالات بناءً على قائمة معينة
+            const renderArticles = (articles) => {
+                articlesContainer.innerHTML = '';
+                if (articles.length === 0) {
+                    noArticlesMessage.classList.remove('hidden');
+                } else {
+                    noArticlesMessage.classList.add('hidden');
+                    articles.forEach((article, index) => {
+                        articlesContainer.appendChild(createCard(article, index));
+                    });
+                }
+            };
+
+            // دالة لتصفية المقالات
+            const filterAndSearch = () => {
+                const searchTerm = searchInput.value.toLowerCase().trim();
+                const checkedFilters = Array.from(filterCheckboxes)
+                                            .filter(checkbox => checkbox.checked)
+                                            .map(checkbox => checkbox.value);
+
+                const filtered = articlesData.filter(article => {
+                    const matchesSearch = article.title.toLowerCase().includes(searchTerm) || article.description.toLowerCase().includes(searchTerm);
+                    const matchesFilter = checkedFilters.length === 0 || checkedFilters.includes(article.tag);
+                    return matchesSearch && matchesFilter;
+                });
+
+                renderArticles(filtered);
+            };
+
+            // معالجة فتح وإغلاق الشريط الجانبي
+            filterBtn.addEventListener('click', () => {
+                filterSidebar.classList.toggle('open');
+                overlay.classList.toggle('active');
+            });
+
+            closeSidebarBtn.addEventListener('click', () => {
+                filterSidebar.classList.remove('open');
+                overlay.classList.remove('active');
+            });
+            
+            overlay.addEventListener('click', () => {
+                filterSidebar.classList.remove('open');
+                overlay.classList.remove('active');
+            });
+
+            // معالجة البحث والفلترة
+            searchInput.addEventListener('input', filterAndSearch);
+            filterCheckboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', filterAndSearch);
+            });
+
+            // عرض المقالات عند تحميل الصفحة لأول مرة
+            renderArticles(articlesData);
+
+            // JavaScript لتشغيل القائمة المتجاوبة
+            const menuBtn = $('#menu-btn');
+            const mobileMenu = $('#mobile-menu');
+            menuBtn.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+                menuBtn.classList.toggle('open');
+            });
+
+            // إخفاء القائمة المتجاوبة عند الضغط على أي رابط
+            $$('#mobile-menu a').forEach(link => {
+                link.addEventListener('click', () => {
+                    mobileMenu.classList.add('hidden');
+                    menuBtn.classList.remove('open');
+                });
+            });
+
+            // زر الانضمام لإظهار رسالة التنبيه
+            const joinNowBtn = $('#join-now-btn');
+            const joinNowMobileBtn = $('#join-now-mobile-btn');
+            joinNowBtn.addEventListener('click', () => showToast('صفحة الانضمام', 'تم تحويلك إلى صفحة التسجيل.', 'success'));
+            joinNowMobileBtn.addEventListener('click', () => showToast('صفحة الانضمام', 'تم تحويلك إلى صفحة التسجيل.', 'success'));
+        });
+    </script>
+</body>
+</html>
